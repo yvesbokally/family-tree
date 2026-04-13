@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbre Généalogique - Famille BOKALLY BIKANDA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+
+        .header h1 { font-size: 18px; }
+        .header p { font-size: 12px; opacity: 0.8; }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        button {
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 11px;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+
+        .legend span {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .edit-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            z-index: 200;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .edit-panel.open { transform: translateX(0); }
+
+        .toggle-edit {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 150;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 300;
+            display: none;
+        }
+
+        .close-panel {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👑 Arbre Généalogique - Dynastie BOKALLY BIKANDA</h1>
+        <p>📜 Du plus ancien (en haut) au plus récent (en bas) | Cliquez pour ajouter des membres</p>
+    </div>
+    <div class="legend">
+        <div><span style="background: linear-gradient(135deg, #667eea, #764ba2);"></span> Ancêtres</div>
+        <div style="margin-top: 5px;"><span style="background: linear-gradient(135deg, #f093fb, #f5576c);"></span> VOUS</div>
+        <div style="margin-top: 5px;"><span style="background: #4caf50;"></span> Ajouts récents</div>
+    </div>
+    <div class="controls">
+        <button onclick="zoomIn()">🔍 +</button>
+        <button onclick="zoomOut()">🔍 -</button>
+        <button onclick="resetView()">⟳ Réinitialiser</button>
+        <button onclick="centerOnMe()">🎯 Centrer sur moi</button>
+        <button onclick="exportData()">💾 Exporter</button>
+        <button onclick="importData()">📂 Importer</button>
+    </div>
+    <div class="info">
+        📊 <span id="nodeCount"></span> personnes | 👤 Vous: <strong>BOKALLY BIKANDA</strong>
+    </div>
+    <button class="toggle-edit" onclick="toggleEditPanel()">✏️ Ajouter un membre</button>
+
+    <div class="edit-panel" id="editPanel">
+        <button class="close-panel" onclick="toggleEditPanel()">✕</button>
+        <h2 style="margin-bottom: 20px;">➕ Ajouter un membre</h2>
+        <form id="addMemberForm">
+            <div class="form-group">
+                <label>👤 Nom complet</label>
+                <input type="text" id="memberName" required placeholder="Ex: JEAN BOKALLY">
+            </div>
+            <div class="form-group">
+                <label>👨‍👦 Fils de (père)</label>
+                <select id="fatherName" required>
+                    <option value="">Sélectionner le père</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>📅 Année de naissance</label>
+                <input type="text" id="birthYear" placeholder="Ex: 1990">
+            </div>
+            <div class="form-group">
+                <label>👥 Type de lien</label>
+                <select id="relationType">
+                    <option value="direct">Descendant direct</option>
+                    <option value="sibling">Frère/Soeur</option>
+                    <option value="cousin">Cousin</option>
+                </select>
+            </div>
+            <button type="submit" class="submit-btn">✅ Ajouter à l'arbre</button>
+        </form>
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3>📋 Derniers ajouts</h3>
+            <div id="recentAdditions"></div>
+        </div>
+    </div>
+
+    <div id="successMessage" class="success-message">✅ Membre ajouté avec succès !</div>
+    <svg id="treeSvg" style="width: 100%; height: 100vh; cursor: grab;"></svg>
+
+    <script>
+        let familyData = { persons: {}, recentAdditions: [] };
+        
+        // Données initiales
+        const initialPersons = [
+            "KWASIO", "BOBIA", "BIBVUNG", "BINGAMBI", "SANGIE", "BIOGO", "MBIER", "KWAGA",
+            "BODJIUNG", "KIALA", "AKWALSIO", "BOKAL", "TSAMA", "MATSAMA", "NZATSAMA", "TSAMANZA",
+            "BOKAL", "NDZAGA", "BODJIUNG", "BIKANDA", "BOKALLY", "BOKALLY BIKANDA"
+        ];
+        
+        function initData() {
+            const saved = localStorage.getItem('familyTree');
+            if (saved) {
+                familyData = JSON.parse(saved);
+            } else {
+                initialPersons.forEach((name, index) => {
+                    familyData.persons[name] = {
+                        name: name,
+                        generation: initialPersons.length - index,
+                        children: [],
+                        isMe: name === "BOKALLY BIKANDA"
+                    };
+                });
+                // Définir les relations père-fils
+                for (let i = 0; i < initialPersons.length - 1; i++) {
+                    familyData.persons[initialPersons[i+1]].father = initialPersons[i];
+                    familyData.persons[initialPersons[i]].children.push(initialPersons[i+1]);
+                }
+            }
+            saveData();
+        }
+        
+        function saveData() {
+            localStorage.setItem('familyTree', JSON.stringify(familyData));
+        }
+        
+        function updateSelectors() {
+            const fatherSelect = document.getElementById('fatherName');
+            fatherSelect.innerHTML = '<option value="">Sélectionner le père</option>';
+            Object.keys(familyData.persons).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                fatherSelect.appendChild(option);
+            });
+        }
+        
+        document.getElementById('addMemberForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('memberName').value.trim();
+            const father = document.getElementById('fatherName').value;
+            const birthYear = document.getElementById('birthYear').value;
+            
+            if (!name || !father) { alert("Veuillez remplir le nom et le père"); return; }
+            if (familyData.persons[name]) { alert("Ce nom existe déjà"); return; }
+            
+            const fatherGen = familyData.persons[father].generation;
+            familyData.persons[name] = {
+                name: name,
+                generation: fatherGen - 1,
+                father: father,
+                children: [],
+                birthYear: birthYear,
+                addedAt: new Date().toISOString()
+            };
+            familyData.persons[father].children.push(name);
+            familyData.recentAdditions.unshift({ name: name, father: father, date: new Date().toLocaleString() });
+            if (familyData.recentAdditions.length > 5) familyData.recentAdditions.pop();
+            saveData();
+            
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => document.getElementById('successMessage').style.display = 'none', 2000);
+            document.getElementById('addMemberForm').reset();
+            drawTree();
+            updateSelectors();
+            updateRecentAdditions();
+        });
+        
+        function updateRecentAdditions() {
+            const container = document.getElementById('recentAdditions');
+            if (familyData.recentAdditions.length === 0) {
+                container.innerHTML = '<p>Aucun ajout récent</p>';
+                return;
+            }
+            container.innerHTML = familyData.recentAdditions.map(a => 
+                `<div style="margin-bottom: 8px; padding: 5px; background: #f5f5f5; border-radius: 5px;">
+                    <strong>${a.name}</strong><br><small>👨‍👦 fils de ${a.father}<br>📅 ${a.date}</small>
+                </div>`
+            ).join('');
+        }
+        
+        function exportData() {
+            const dataStr = JSON.stringify(familyData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `family-tree-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        familyData = JSON.parse(event.target.result);
+                        saveData();
+                        drawTree();
+                        updateSelectors();
+                        updateRecentAdditions();
+                        alert('Import réussi !');
+                    } catch(err) { alert('Fichier invalide'); }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+        
+        function toggleEditPanel() {
+            document.getElementById('editPanel').classList.toggle('open');
+            if (document.getElementById('editPanel').classList.contains('open')) updateSelectors();
+        }
+        
+        // Dessin SVG
+        const svg = document.getElementById("treeSvg");
+        const svgNS = "http://www.w3.org/2000/svg";
+        let currentZoom = 0.7, currentTranslateX = 0, currentTranslateY = 0, isDragging = false, startX, startY;
+        let mainGroup;
+        
+        function drawTree() {
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            mainGroup = document.createElementNS(svgNS, "g");
+            svg.appendChild(mainGroup);
+            
+            const personsArray = Object.values(familyData.persons).sort((a,b) => b.generation - a.generation);
+            document.getElementById('nodeCount').textContent = personsArray.length;
+            
+            const nodeWidth = 220, nodeHeight = 65, startXPos = 490, startYPos = 30, yStep = 85;
+            
+            // Connexions
+            for (let i = 0; i < personsArray.length - 1; i++) {
+                const person = personsArray[i];
+                if (person.children && person.children.length) {
+                    person.children.forEach(child => {
+                        const childIndex = personsArray.findIndex(p => p.name === child);
+                        if (childIndex > i) {
+                            const line = document.createElementNS(svgNS, "line");
+                            line.setAttribute("x1", startXPos + nodeWidth/2);
+                            line.setAttribute("y1", startYPos + i * yStep + nodeHeight);
+                            line.setAttribute("x2", startXPos + nodeWidth/2);
+                            line.setAttribute("y2", startYPos + childIndex * yStep);
+                            line.setAttribute("stroke", "#f0f0f0");
+                            line.setAttribute("stroke-width", "2");
+                            line.setAttribute("stroke-dasharray", "6,4");
+                            mainGroup.appendChild(line);
+                        }
+                    });
+                }
+            }
+            
+            // Nœuds
+            personsArray.forEach((person, index) => {
+                const group = document.createElementNS(svgNS, "g");
+                const x = startXPos, y = startYPos + index * yStep;
+                const rect = document.createElementNS(svgNS, "rect");
+                rect.setAttribute("x", x); rect.setAttribute("y", y);
+                rect.setAttribute("width", nodeWidth); rect.setAttribute("height", nodeHeight);
+                rect.setAttribute("rx", "12");
+                const gradient = person.isMe ? "url(#meGradient)" : "url(#nodeGradient)";
+                rect.setAttribute("fill", gradient);
+                rect.setAttribute("stroke", "white");
+                rect.setAttribute("stroke-width", person.isMe ? "3" : "2");
+                
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", x + nodeWidth/2); text.setAttribute("y", y + nodeHeight/2 - 5);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("fill", "white");
+                text.setAttribute("font-size", "14");
+                text.setAttribute("font-weight", "bold");
+                text.textContent = (person.isMe ? "👑 " : "👨‍👦 ") + person.name;
+                
+                const subtext = document.createElementNS(svgNS, "text");
+                subtext.setAttribute("x", x + nodeWidth/2); subtext.setAttribute("y", y + nodeHeight/2 + 18);
+                subtext.setAttribute("text-anchor", "middle");
+                subtext.setAttribute("fill", "rgba(255,255,255,0.85)");
+                subtext.setAttribute("font-size", "11");
+                subtext.textContent = person.isMe ? "⭐ VOUS ⭐" : (person.father ? `fils de ${person.father}` : `Génération ${person.generation}`);
+                
+                group.appendChild(rect); group.appendChild(text); group.appendChild(subtext);
+                mainGroup.appendChild(group);
+            });
+            
+            // Dégradés
+            const defs = document.createElementNS(svgNS, "defs");
+            const grad1 = document.createElementNS(svgNS, "linearGradient");
+            grad1.setAttribute("id", "nodeGradient");
+            grad1.innerHTML = '<stop offset="0%" stop-color="#667eea"/><stop offset="100%" stop-color="#764ba2"/>';
+            const grad2 = document.createElementNS(svgNS, "linearGradient");
+            grad2.setAttribute("id", "meGradient");
+            grad2.innerHTML = '<stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/>';
+            defs.appendChild(grad1); defs.appendChild(grad2);
+            mainGroup.appendChild(defs);
+            
+            updateTransform();
+        }
+        
+        function updateTransform() { if(mainGroup) mainGroup.setAttribute("transform", `translate(${currentTranslateX}, ${currentTranslateY}) scale(${currentZoom})`); }
+        window.zoomIn = () => { currentZoom = Math.min(currentZoom + 0.1, 2); updateTransform(); };
+        window.zoomOut = () => { currentZoom = Math.max(currentZoom - 0.1, 0.4); updateTransform(); };
+        window.resetView = () => { currentZoom = 0.7; currentTranslateX = 0; currentTranslateY = 0; updateTransform(); };
+        window.centerOnMe = () => {
+            const personsArray = Object.values(familyData.persons).sort((a,b) => b.generation - a.generation);
+            const meIndex = personsArray.findIndex(p => p.isMe);
+            if(meIndex !== -1) {
+                const targetY = 30 + meIndex * 85 + 32;
+                currentTranslateY = window.innerHeight/2 - targetY * currentZoom;
+                currentTranslateX = window.innerWidth/2 - 600;
+                updateTransform();
+            }
+        };
+        
+        svg.addEventListener("mousedown", (e) => { isDragging = true; startX = e.clientX - currentTranslateX; startY = e.clientY - currentTranslateY; svg.style.cursor = "grabbing"; });
+        window.addEventListener("mousemove", (e) => { if(isDragging) { currentTranslateX = e.clientX - startX; currentTranslateY = e.clientY - startY; updateTransform(); } });
+        window.addEventListener("mouseup", () => { isDragging = false; svg.style.cursor = "grab"; });
+        svg.addEventListener("wheel", (e) => { e.preventDefault(); currentZoom = Math.min(Math.max(currentZoom + (e.deltaY > 0 ? -0.07 : 0.07), 0.4), 2); updateTransform(); });
+        svg.style.cursor = "grab";
+        
+        initData();
+        drawTree();
+        updateRecentAdditions();
+    </script>
+</body>
+</html>
